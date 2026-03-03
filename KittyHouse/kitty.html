@@ -1,0 +1,2192 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Hello Kitty (Three.js)</title>
+  <link rel="icon" type="image/png" href="./assets/Scene 3D/favicon.png" sizes="32x32">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+  <meta name="description" content="particles.js is a lightweight JavaScript library for creating particles.">
+  <link rel="stylesheet" media="screen" href="css/style.css">
+  <style>
+    body{
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    html,body { height:100%; margin:0; font-family:system-ui,Segoe UI,Roboto,Arial; background: linear-gradient(180deg,#6c7fb1 0%, #907e9e 40%, #a25879 70%, #fec2e6 100%); }
+    #ui {
+      position: fixed;
+      left: 12px;
+      top: 12px;
+      z-index: 20;
+      background: transparent;
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 8px 22px rgba(0,0,0,0.12);
+      width: 260px;
+      max-height: none; 
+      overflow: visible; 
+      margin-top:40px;
+    }
+    #ui h3 { margin:0 0 8px 0; font-size:15px; text-align: center; color: #13e8e9; }
+    #ui label { display:block; margin:6px 0 3px; font-size:13px; font-weight: bold; }
+    #ui input[type="range"] { width:100%; }
+    #ui input[type="color"] { width:48px; height:28px; padding:0; border:0; vertical-align:middle; }
+    #ui .row { display:flex; gap:8px; align-items:center; }
+    #ui button { margin-top:8px; width:100%; padding:8px 10px; border-radius:8px; border:0; background:#000022; color:#13E8E9; cursor:pointer;  font-family: Helvetica, Arial, sans-serif !important; font-weight: bold; }
+    #ui .small { width:auto; padding:6px 8px; font-size:13px; background:#eee; color:#222; }
+    #ui select {
+      background-color: #000022;
+      color: #13E8E9;           
+      font-family: Helvetica, Arial, sans-serif;
+      font-weight: bold;
+      border-radius: 4px;
+      border: 2px solid #fff;
+      padding: 6px;
+      appearance: none; 
+      -webkit-appearance: none;
+      -moz-appearance: none;
+     cursor: pointer;
+    } 
+    #ui select::-ms-expand {
+     display: none; 
+    }
+    @media (max-width:640px){
+      #ui { width: 92%; left:4%; top:8px; padding:10px; }
+    }
+     #toggleCurtainsIcon {
+       width:80px;
+       height:80px;
+       cursor:pointer;
+       position:fixed;
+       right:30px;
+       bottom:240px;
+       z-index:30;
+     }
+     #randomizeIcon {
+        width: 100px;
+        height: 100px;
+        cursor: pointer;
+        position: fixed;
+        right: 20px;   
+        bottom: 120px;
+        z-index: 30;
+      }
+      #resetIcon {
+        width: 50px;
+        height: 50px;
+        cursor: pointer;
+        position: fixed;
+        right: 45px;
+        bottom: 40px;
+        z-index: 50;
+        font-weight:bold;
+      }
+
+      #enterHouse {
+        position: fixed;
+        right: 35px;
+        bottom: 520px;
+        width: 60px;
+        cursor: pointer;
+        z-index: 50;
+      }
+
+      #exitHouse {
+        position: fixed;
+        right: 40px;
+        bottom: 460px;
+        width: 40px;
+        cursor: pointer;
+        z-index: 50;
+      }
+  </style>
+</head>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const music = document.getElementById("bgMusic");
+    if (music) {
+      music.volume = 0.6; 
+      music.play().catch(() => {
+        document.addEventListener("click", () => music.play(), { once: true });
+      });
+    }
+  });
+</script>
+<body>
+<audio id="bgMusic" src="./assets/music/chinese-bambo-music.mp3" loop></audio>
+<canvas id="canvas"></canvas>
+<div id="snow"></div>
+<div id="particles-js"></div>
+<script src="../particles.js"></script>
+<script src="./js/app.js"></script>
+
+
+
+<div id="ui">
+  <h3>Hello Kitty</h3>
+
+  <label>Presets
+    <div class="row">
+      <select id="preset" class="count-particles" style="flex:1">
+        <option value="classic">Classic</option>
+        <option value="pink">Pink Dream</option>
+        <option value="night">Night Mode</option>
+        <option value="pastel">Pastel</option>
+      </select>
+      <button id="applyPreset" class="small">Appliquer</button>
+    </div>
+  </label>
+
+  <label>Couleur du nœud
+    <div class="row"><input id="colorBow" type="color" value="#e6002d"> <span id="colBowText" style="margin-left:6px">#e6002d</span></div>
+  </label>
+
+  <label>Couleur t-shirt
+    <div class="row"><input id="colorShirt" type="color" value="#ffea00"> <span id="colShirtText">#ffea00</span></div>
+  </label>
+
+  <label>Couleur salopette
+    <div class="row"><input id="colorOverall" type="color" value="#0a86dc"> <span id="colOverallText">#0a86dc</span></div>
+  </label>
+
+  <label>Position X
+    <input id="posX" class="neon-range" type="range" min="-4" max="11" step="0.01" value="0">
+  </label>
+
+  <label>Position Z
+    <input id="posZ" class="neon-range" type="range" min="-5" max="5" step="0.01" value="0">
+  </label>
+
+  <label>Rotation Y
+    <input id="rotY" class="neon-range" type="range" min="-3.14" max="3.14" step="0.01" value="0.0">
+  </label>
+
+  <label>Rotation X
+    <input id="rotX" class="neon-range" type="range" min="-3.14" max="3.14" step="0.01" value="0.0">
+  </label>
+
+  <label>Rotation Z
+    <input id="rotZ" class="neon-range" type="range" min="-3.14" max="3.14" step="0.01" value="0.0">
+  </label>
+
+  <img id="randomizeIcon" src="assets/Scene 3D/manikin.svg" alt="Randomize Colors">
+  <img id="resetIcon" src="assets/Scene 3D/restart.svg" alt="Reset">
+  </div>
+  <img id="toggleCurtainsIcon" src="assets/Scene 3D/curtain.svg" alt="Toggle Curtains">
+  <img id="enterHouse" src="assets/Scene 3D/house.svg">
+  <img id="exitHouse" src="assets/Scene 3D/exit.svg">
+
+
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+<script type="module">
+  import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+  import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+  import { FBXLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/FBXLoader.js';
+
+  // ---------- Textures ----------
+  const textureLoader = new THREE.TextureLoader();
+
+  // ---------- Matériau pour le mur ----------
+  const wallMaterial = new THREE.MeshStandardMaterial({
+    color: 0xffffff,
+    roughness: 0.8,
+    metalness: 0,
+    flatShading: true
+  });
+
+
+  // ---------- Scene / Camera / Renderer ----------
+  const scene = new THREE.Scene();
+
+  const loader = new GLTFLoader();
+  let backgroundModel = null;
+  const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100);
+  camera.position.set(-18, 6, 40);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setClearColor(0x000000, 0); 
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  document.body.appendChild(renderer.domElement);
+
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+
+  const canvasElement = renderer.domElement;
+  canvasElement.style.zIndex = '1'; 
+  canvasElement.style.position = 'fixed';
+  canvasElement.style.top = '0';
+  canvasElement.style.left = '0';
+
+  //-----------------Animation In house-------------
+  const indoorCameraPosition = { x:-5, y: 1.5, z: 0 };
+  const indoorCameraLookAt   = { x: 15, y: 30, z: 0 };
+  document.getElementById("enterHouse").addEventListener("click", () => {
+
+    gsap.to(camera.position, {
+      duration: 5,
+      x: indoorCameraPosition.x,
+      y: indoorCameraPosition.y,
+      z: indoorCameraPosition.z,
+      ease: "power2.inOut",
+      onUpdate: () => {
+        camera.lookAt(indoorCameraLookAt.x, indoorCameraLookAt.y, indoorCameraLookAt.z);
+      }
+    });
+
+    controls.enabled = false;
+
+    setTimeout(() => { controls.enabled = true; }, 2200);
+  });
+
+  //------------------Animation Out of house-------------
+  document.getElementById("exitHouse").addEventListener("click", () => {
+
+    gsap.to(camera.position, {
+      duration: 2,
+      x: -18,
+      y: 6,
+      z: 40,
+      ease: "power2.inOut",
+      onUpdate: () => {
+        camera.lookAt(0, 1.1, 0);
+      }
+    });
+
+    controls.enabled = false;
+    setTimeout(() => { controls.enabled = true; }, 2000);
+  });
+
+
+  // ---------- Controls ----------
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.12;
+  controls.target.set(0, 1.1, 0);
+  
+  // ---------- Lights ----------
+  scene.add(new THREE.AmbientLight(0xffffff, 1.2));
+  
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
+  keyLight.position.set(4, 6, 6);
+  keyLight.castShadow = true;
+  keyLight.shadow.camera.left = -8;
+  keyLight.shadow.camera.right = 8;
+  keyLight.shadow.camera.top = 8;
+  keyLight.shadow.camera.bottom = -8;
+  keyLight.shadow.camera.near = 0.5;
+  keyLight.shadow.camera.far = 30;
+  keyLight.shadow.mapSize.set(2048, 2048);
+  keyLight.shadow.bias = -0.0006;
+  scene.add(keyLight);
+  
+  const fillLight = new THREE.DirectionalLight(0xffffff, 0.4);
+  fillLight.position.set(-5, 3, 2);
+  scene.add(fillLight);
+
+
+  //------------------GRASS--------------------------------
+  const grassTexture = textureLoader.load("./assets/Scene 3D/grassTexture.webp");
+
+  // Répétition de la texture
+  grassTexture.wrapS = THREE.RepeatWrapping;
+  grassTexture.wrapT = THREE.RepeatWrapping;
+  grassTexture.repeat.set(15, 15); 
+
+  // ----- SOL 3D AVEC TEXTURE -----
+  const groundGeo = new THREE.PlaneGeometry(200, 200);
+  const groundMat = new THREE.MeshStandardMaterial({
+    map: grassTexture,
+    roughness: 0.9,
+  });
+
+  const ground = new THREE.Mesh(groundGeo, groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -3;
+  ground.receiveShadow = true;
+
+  scene.add(ground);
+
+
+
+  // ---------- Pièce complète (sol + murs avec épaisseur) ----------
+  // Sol avec texture parquet et ÉPAISSEUR
+  const floorGeometry = new THREE.BoxGeometry(30, 2, 20); // 0.3 d'épaisseur
+  const floorMaterial = new THREE.MeshStandardMaterial({ 
+    roughness: 0.8,
+    metalness: 0.1
+  });
+
+  // Charger texture du sol
+  textureLoader.load(
+    './assets/Scene 3D/parquet.jpg',
+    function(texture) {
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.repeat.set(4, 4);
+
+      floorMaterial.map = texture;
+      floorMaterial.needsUpdate = true;
+    },
+    undefined,
+    function(err) {
+      console.error('Erreur de chargement texture sol:', err);
+      floorMaterial.color = new THREE.Color(0xb31414);
+    }
+  );
+
+  const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+  floor.position.set(5.35, -2.65, 0.35);
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  //  GROUPE GLOBAL DU MUR ARRIÈRE
+  const backWallGroup = new THREE.Group();
+  scene.add(backWallGroup);
+
+  //  GEOMETRIE DU MUR ARRIÈRE COURBÉ
+  const wallShape = new THREE.Shape();
+  const wallWidth = 30;
+  const wallHeight = 12;
+
+  const windowWidth = 8;
+  const windowHeight = 6;
+  const windowY = 4;
+  const windowZ = -10;
+
+  // Contour du mur
+  wallShape.moveTo(-wallWidth / 2, 0);
+  wallShape.lineTo(wallWidth / 2, 0);
+  wallShape.lineTo(wallWidth / 2, wallHeight);
+  wallShape.lineTo(-wallWidth / 2, wallHeight);
+  wallShape.lineTo(-wallWidth / 2, 0);
+
+  // Trou = fenêtre
+  const windowHole = new THREE.Path();
+  windowHole.moveTo(-windowWidth / 2, windowY);
+  windowHole.lineTo(windowWidth / 2, windowY);
+  windowHole.lineTo(windowWidth / 2, windowY + windowHeight);
+  windowHole.lineTo(-windowWidth / 2, windowY + windowHeight);
+  windowHole.lineTo(-windowWidth / 2, windowY);
+
+  wallShape.holes.push(windowHole);
+
+  // Épaisseur
+  const extrudeSettings = {
+    depth: 0.5,
+    bevelEnabled: false
+  };
+
+
+  const wallGeometry = new THREE.ExtrudeGeometry(wallShape, extrudeSettings);
+
+  const flatBackWall = new THREE.Mesh(
+    wallGeometry,
+    new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      roughness: 0.7
+    })
+  );
+
+  flatBackWall.position.set(0, -3.65, windowZ - 0.15);
+  flatBackWall.receiveShadow = true;
+  backWallGroup.add(flatBackWall);
+
+  //  CADRE DE LA FENÊTRE
+  const frameThickness = 0.2;
+  const frameMaterial1 = new THREE.MeshStandardMaterial({ color: 0xffffff });
+
+  function createFrame(x, y, w, h) {
+    const geom = new THREE.BoxGeometry(w, h, 0.3);
+    const mesh = new THREE.Mesh(geom, frameMaterial1);
+    mesh.position.set(x, y, windowZ + 0.3);
+    return mesh;
+  }
+
+  // Bordures de la fenetre
+  backWallGroup.add(createFrame(0, 6.4, windowWidth + 0.3, frameThickness)); 
+  backWallGroup.add(createFrame(0, 0.25, windowWidth + 0.3, frameThickness));
+  backWallGroup.add(createFrame(-windowWidth / 2 - 0.15, 3.5, frameThickness, windowHeight));
+  backWallGroup.add(createFrame(windowWidth / 2 + 0.15, 3.5, frameThickness, windowHeight));
+
+  // Barres internes e la fenetre
+  function addCrossbar(x, y, w, h) {
+    const bar = new THREE.Mesh(
+      new THREE.BoxGeometry(w, h, 0.3),
+      frameMaterial1
+    );
+    bar.position.set(x, y, windowZ + 0.02);
+    backWallGroup.add(bar);
+  }
+
+  addCrossbar(-windowWidth / 6 + 0.3, 3.325, 0.15, windowHeight);
+  addCrossbar(windowWidth / 6 - 0.3, 3.325, 0.15, windowHeight);
+  addCrossbar(0, 2.3, windowWidth, 0.15);
+  addCrossbar(0, 4.35, windowWidth, 0.15);
+
+  //  VITRE de le fenetre
+  const glassMaterial = new THREE.MeshPhysicalMaterial({
+    color: 0xffffff,
+    metalness: 0,
+    roughness: 0.1,
+    transmission: 0.8,
+    transparent: true
+  });
+
+  const glass = new THREE.Mesh(
+    new THREE.BoxGeometry(windowWidth, windowHeight, 0.05),
+    glassMaterial
+  );
+
+  glass.position.set(0, 3.3, windowZ + 0.39);
+  backWallGroup.add(glass);
+
+  //  RIDEAUX
+  const curtainTexture = textureLoader.load('./assets/Scene 3D/TextureRouge.jpg');
+  curtainTexture.wrapS = THREE.RepeatWrapping;
+  curtainTexture.wrapT = THREE.RepeatWrapping;
+  curtainTexture.repeat.set(2, 4);
+
+  const curtainMaterial = new THREE.MeshStandardMaterial({
+    map: curtainTexture,
+    side: THREE.DoubleSide,
+    roughness: 0.9
+  });
+
+  function createCurtain(width, height, xPosition) {
+    const geom = new THREE.PlaneGeometry(width, height, 40, 200);
+    const curtain = new THREE.Mesh(geom, curtainMaterial);
+
+    curtain.position.set(xPosition, 3, windowZ + 0.9);
+    curtain.castShadow = true;
+
+    // plis des rideaux
+    const verts = geom.attributes.position;
+    const count = verts.count;
+
+    for (let i = 0; i < count; i++) {
+      const x = verts.getX(i);
+      const wave = Math.sin((x / width) * Math.PI * 9) * 0.25;
+      verts.setZ(i, wave);
+    }
+
+    verts.needsUpdate = true;
+    return curtain;
+  }
+
+  const curtainLeft = createCurtain(4, 9, -4.5);
+  curtainLeft.rotation.y = -0.1;
+  backWallGroup.add(curtainLeft);
+
+  const curtainRight = createCurtain(4, 9, 4.5);
+  curtainRight.rotation.y = 0.1;
+  backWallGroup.add(curtainRight);
+
+  //  TRINGLE DE RIDEAU
+  const tringleMaterial = new THREE.MeshStandardMaterial({
+    color: 0x9e0000,
+    roughness: 0.6,
+    metalness: 0.2
+  });
+
+  // barre de rideau
+  const barLength = 14;
+  const barRadius = 0.12;
+
+  const barGeometry = new THREE.CylinderGeometry(barRadius, barRadius, barLength, 32);
+  const bar = new THREE.Mesh(barGeometry, tringleMaterial);
+
+  bar.rotation.z = Math.PI / 2;
+  bar.position.set(0, 7, windowZ + 0.8);
+  bar.castShadow = true;
+
+  backWallGroup.add(bar);
+
+  // Positions ouvertes (actuelles)
+  const leftOpenX = curtainLeft.position.x;
+  const rightOpenX = curtainRight.position.x;
+
+  // Positions fermées (les rideaux se rejoignent au centre)
+  const leftClosedX = -2;
+  const rightClosedX = 2;
+
+  let curtainsClosed = false; 
+  function animateCurtains() {
+    const speed = 0.05; 
+
+    if (curtainsClosed) {
+      // Rideaux se ferment
+      curtainLeft.position.x += (leftClosedX - curtainLeft.position.x) * speed;
+      curtainRight.position.x += (rightClosedX - curtainRight.position.x) * speed;
+    } else {
+      // Rideaux s'ouvrent
+      curtainLeft.position.x += (leftOpenX - curtainLeft.position.x) * speed;
+      curtainRight.position.x += (rightOpenX - curtainRight.position.x) * speed;
+    }
+  }
+
+
+  // supports
+  function createSupport(xPos) {
+    const support = new THREE.Mesh(
+      new THREE.SphereGeometry(0.35, 32, 32),
+      tringleMaterial
+    );
+    support.position.set(xPos, 7, windowZ + 0.8);
+    return support;
+  }
+
+  backWallGroup.add(createSupport(-barLength / 2));
+  backWallGroup.add(createSupport(barLength / 2));
+
+  //  POSITION GLOBALE DU MUR
+  backWallGroup.position.set(5.35, 0, 0);      
+  backWallGroup.rotation.y = 0;
+  backWallGroup.scale.set(1, 1, 1);
+
+
+  // ---------MUR GAUCHE -----------
+  const wallpaper = textureLoader.load("./assets/Scene 3D/WallTexture.jpg");
+  wallpaper.wrapS = THREE.RepeatWrapping;
+  wallpaper.wrapT = THREE.RepeatWrapping;
+  wallpaper.repeat.set(0.2, 0.2); 
+
+  const leftShape = new THREE.Shape();
+  const wallH=18;
+  const wallW = 20;
+  const arcRadiusXb = 10;
+  const arcRadiusYb = 6;
+
+  leftShape.moveTo(0, 0);
+  leftShape.lineTo(wallW, 0);
+  leftShape.lineTo(wallW, wallH  - arcRadiusYb);
+
+  leftShape.quadraticCurveTo(
+    wallW / 2, wallH  + arcRadiusYb,
+    0, wallH - arcRadiusYb
+  );
+
+  leftShape.lineTo(0, 0);
+
+  const leftExtrude = {
+    depth: 1,
+    bevelEnabled: false
+  };
+
+  const leftWallCurveGeometry = new THREE.ExtrudeGeometry(leftShape, leftExtrude);
+
+
+  const leftWallCurve = new THREE.Mesh(
+    leftWallCurveGeometry,
+    new THREE.MeshStandardMaterial({
+    map: wallpaper,
+    roughness: 0.8,
+  })
+  );
+
+  // Orientation
+  leftWallCurve.rotation.y = Math.PI / 2;
+
+  // Position
+  leftWallCurve.position.set(-10.65, -3.65, 9.85);
+
+  leftWallCurve.receiveShadow = true;
+  scene.add(leftWallCurve);
+
+  // Activer les ombres
+  floor.receiveShadow = true;
+
+
+  // ------------ MUR DROIT --------------
+  const rightWallpaper = wallpaper;
+
+  // shape du mur droit
+  const rightShape = new THREE.Shape();
+  rightShape.moveTo(0, 0);
+  rightShape.lineTo(wallW, 0);
+  rightShape.lineTo(wallW, wallH - arcRadiusYb);
+
+  rightShape.quadraticCurveTo(
+    wallW / 2,
+    wallH + arcRadiusYb,
+    0,
+    wallH - arcRadiusYb
+  );
+
+  rightShape.lineTo(0, 0);
+
+  // extrusion
+  const rightExtrude = {
+    depth: 1,
+    bevelEnabled: false
+  };
+
+  const rightWallGeometry = new THREE.ExtrudeGeometry(rightShape, rightExtrude);
+
+  const rightWall = new THREE.Mesh(
+    rightWallGeometry,
+    new THREE.MeshStandardMaterial({
+      map: rightWallpaper,
+      roughness: 0.8,
+    })
+  );
+
+  // orientation : inversée par rapport au mur gauche
+  rightWall.rotation.y = -Math.PI / 2;
+
+  // position : symétrique du mur gauche
+  rightWall.position.set(21.35, -3.65, -10.15);
+
+  rightWall.receiveShadow = true;
+
+  scene.add(rightWall);
+
+  //--------Tableau Kitty Familly---
+  const tableauGroup = new THREE.Group();
+
+  // Dimensions du tableau
+  const width = 2;    // largeur
+  const height = 2; // hauteur
+  const depth = 0.05; // épaisseur du cadre
+
+  // Charger la texture Hello Kitty
+  const loader3 = new THREE.TextureLoader();
+  const kittyTexture = loader3.load('./assets/Scene 3D/KittyFamilly.png');
+
+  // Plan intérieur (l'image)
+  const planeGeometry = new THREE.PlaneGeometry(width, height);
+  const planeMaterial = new THREE.MeshStandardMaterial({ 
+      map: kittyTexture
+  });
+  const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+  plane.position.z = depth / 2; 
+  tableauGroup.add(plane); 
+
+  // Cadre 3D (bordure)
+  const frameMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+  const thickness = 0.05;
+
+  // Top
+  const topBorder = new THREE.Mesh(new THREE.BoxGeometry(width + thickness*2, thickness, depth), frameMaterial);
+  topBorder.position.set(0, height/2 + thickness/2, 0);
+  tableauGroup.add(topBorder);
+
+  // Bottom
+  const bottomBorder = new THREE.Mesh(new THREE.BoxGeometry(width + thickness*2, thickness, depth), frameMaterial);
+  bottomBorder.position.set(0, -height/2 - thickness/2, 0);
+  tableauGroup.add(bottomBorder);
+
+  // Left
+  const leftBorder = new THREE.Mesh(new THREE.BoxGeometry(thickness, height, depth), frameMaterial);
+  leftBorder.position.set(-width/2 - thickness/2, 0, 0);
+  tableauGroup.add(leftBorder);
+
+  // Right
+  const rightBorder = new THREE.Mesh(new THREE.BoxGeometry(thickness, height, depth), frameMaterial);
+  rightBorder.position.set(width/2 + thickness/2, 0, 0);
+  tableauGroup.add(rightBorder);
+
+  tableauGroup.position.set(-9.6, 7, 1.5);
+  tableauGroup.rotation.set(0, Math.PI/2, 0);
+
+
+  // Ajouter le groupe à la scène
+  scene.add(tableauGroup);
+  tableauGroup.scale.set(2, 2, 2); 
+
+  //------ Tableau ribbon 1------------
+  
+  // Créer un groupe pour le tableau
+  const tableauGroup0 = new THREE.Group();
+
+  // Dimensions du tableau
+  const width0 = 1.2;    // largeur
+  const height0 = 1.5; // hauteur
+  const depth0 = 0.05; // épaisseur du cadre
+
+  // Charger la texture Hello Kitty
+  const loader0 = new THREE.TextureLoader();
+  const kittyTexture0 = loader0.load('./assets/Scene 3D/tableau.jpg'); 
+
+  // Plan intérieur (l'image)
+  const planeGeometry0 = new THREE.PlaneGeometry(width0, height0);
+  const planeMaterial0 = new THREE.MeshStandardMaterial({ 
+      map: kittyTexture0
+  });
+  const plane0 = new THREE.Mesh(planeGeometry0, planeMaterial0);
+  plane0.position.z = depth0 / 2;
+  tableauGroup0.add(plane0); 
+
+  // Cadre 3D (bordure)
+
+  const frameMaterial0 = new THREE.MeshStandardMaterial({ color: 0x8B4513 });
+  const thickness0 = 0.05;
+
+  // Top
+  const topBorder0 = new THREE.Mesh(new THREE.BoxGeometry(width0 + thickness0*2, thickness0, depth0), frameMaterial0);
+  topBorder0.position.set(0, height0/2 + thickness0/2, 0);
+  tableauGroup0.add(topBorder0);
+
+  // Bottom
+  const bottomBorder0 = new THREE.Mesh(new THREE.BoxGeometry(width0 + thickness0*2, thickness0, depth0), frameMaterial0);
+  bottomBorder0.position.set(0, -height0/2 - thickness0/2, 0);
+  tableauGroup0.add(bottomBorder0);
+
+  // Left
+  const leftBorder0 = new THREE.Mesh(new THREE.BoxGeometry(thickness0, height0, depth0), frameMaterial0);
+  leftBorder0.position.set(-width0/2 - thickness0/2, 0, 0);
+  tableauGroup0.add(leftBorder0);
+
+  // Right
+  const rightBorder0 = new THREE.Mesh(new THREE.BoxGeometry(thickness0, height0, depth0), frameMaterial0);
+  rightBorder0.position.set(width0/2 + thickness0/2, 0, 0);
+  tableauGroup0.add(rightBorder0);
+
+  tableauGroup0.position.set(-9.5, 5, 4.8);
+  tableauGroup0.rotation.set(0, Math.PI/2, 0);
+
+
+  // Ajouter le groupe à la scène
+  scene.add(tableauGroup0);
+  tableauGroup0.scale.set(1.5, 1.5, 1.5); 
+
+
+
+  //------ Tableau ribbon 2------------
+
+  // Créer un groupe pour le tableau
+  const tableauGroup2 = new THREE.Group();
+
+  // Charger la texture Hello Kitty
+  const loader4 = new THREE.TextureLoader();
+  const kittyTexture4 = loader4.load('./assets/Scene 3D/sakura.jpg'); 
+
+  // Plan intérieur (l'image)
+  const planeGeometry2 = new THREE.PlaneGeometry(width0, height0);
+  const planeMaterial2 = new THREE.MeshStandardMaterial({ 
+      map: kittyTexture4
+  });
+  const plane2 = new THREE.Mesh(planeGeometry2, planeMaterial2);
+  plane2.position.z = depth0 / 2; 
+  tableauGroup2.add(plane2);
+
+  // Cadre 3D (bordure)
+  const frameMaterial2 = new THREE.MeshStandardMaterial({ color: 0x8B4513 }); 
+
+  // Bordures pour le deuxième tableau
+  const topBorder2 = new THREE.Mesh(new THREE.BoxGeometry(width0 + thickness0*2, thickness0, depth0), frameMaterial2);
+  topBorder2.position.set(0, height0/2 + thickness0/2, 0);
+  tableauGroup2.add(topBorder2);
+
+  const bottomBorder2 = new THREE.Mesh(new THREE.BoxGeometry(width0 + thickness0*2, thickness0, depth0), frameMaterial2);
+  bottomBorder2.position.set(0, -height0/2 - thickness0/2, 0);
+  tableauGroup2.add(bottomBorder2);
+
+  const leftBorder2 = new THREE.Mesh(new THREE.BoxGeometry(thickness0, height0, depth0), frameMaterial2);
+  leftBorder2.position.set(-width0/2 - thickness0/2, 0, 0);
+  tableauGroup2.add(leftBorder2);
+
+  const rightBorder2 = new THREE.Mesh(new THREE.BoxGeometry(thickness0, height0, depth0), frameMaterial2);
+  rightBorder2.position.set(width0/2 + thickness0/2, 0, 0);
+  tableauGroup2.add(rightBorder2);
+
+
+  tableauGroup2.position.set(-9.6, 5.5, -1.7);
+  tableauGroup2.rotation.set(0, Math.PI/2, 0);
+
+
+  // Ajouter le groupe à la scène
+  scene.add(tableauGroup2);
+  tableauGroup2.scale.set(1.3, 1.3, 1.3); 
+
+  // ------------------ Plafond arc ------------------ //
+  const plafondGroup2 = new THREE.Group();
+
+  // Paramètres
+  const plafondLength2 = 34;   // longueur du plafond
+  const wallW2 = 20;
+  const wallH2 = 20;
+  const arcRadiusYb2 = 6;
+
+  // Points Bézier pour la courbe
+  const A2 = new THREE.Vector2(0, 0);
+  const B2 = new THREE.Vector2(wallW2/2, arcRadiusYb2*2);
+  const C2 = new THREE.Vector2(wallW2, 0);
+
+  // Dessiner le Shape de l’arc
+  const plafondShape = new THREE.Shape();
+  plafondShape.moveTo(0, 0);       // bas gauche
+  plafondShape.quadraticCurveTo(B2.x, B2.y, C2.x, C2.y); // arc du dessus
+  plafondShape.lineTo(C2.x, -1);   // bas droite (épaisseur très fine)
+  plafondShape.quadraticCurveTo(B2.x, B2.y - 1, 0, -1); // arc du dessous
+  plafondShape.lineTo(0, 0);      
+
+  // Extruder le Shape pour créer le plafond uniforme
+  const extrudeSettings2 = {
+      depth: plafondLength2,
+      bevelEnabled: false,
+      steps: 1
+  };
+
+  const plafondGeometry = new THREE.ExtrudeGeometry(plafondShape, extrudeSettings2);
+
+  // Charger la texture
+  const ceilingTexture = textureLoader.load("./assets/Scene 3D/roofTexture.avif");
+  ceilingTexture.wrapS = THREE.RepeatWrapping;
+  ceilingTexture.wrapT = THREE.RepeatWrapping;
+  ceilingTexture.repeat.set(0.1, 0.1); 
+  ceilingTexture.center.set(0.5, 0.5); // centre de rotation (milieu de la texture)
+  ceilingTexture.rotation = Math.PI / 2; 
+
+  // Créer le matériau avec la texture (côté extérieur seulement)
+  const plafondMaterial = new THREE.MeshStandardMaterial({
+      map: ceilingTexture,
+      roughness: 0.5,
+      side: THREE.FrontSide 
+  });
+
+
+  // Mesh
+  const plafondMesh = new THREE.Mesh(
+      plafondGeometry,
+      plafondMaterial
+  );
+
+  // Positionner et orienter
+  plafondMesh.rotation.y = Math.PI / 2;
+  plafondGroup2.add(plafondMesh);
+  scene.add(plafondGroup2);
+
+  plafondGroup2.position.set(-11.7, 9.35, 9.85);
+
+  // ------------------ Plafond arc3 ------------------ //
+  const plafondGroup3 = new THREE.Group();
+
+  // Paramètres
+  const plafondLength3 = 30;   
+  const wallW3 = 20;
+  const wallH3 = 20;
+  const arcRadiusYb3 = 6;
+
+  const B3 = new THREE.Vector2(wallW3/2, arcRadiusYb3*2);
+  const C3 = new THREE.Vector2(wallW3, 0);
+
+  // Dessiner le Shape de l’arc
+  const plafondShape3 = new THREE.Shape();
+  plafondShape3.moveTo(0, 0);       // bas gauche
+  plafondShape3.quadraticCurveTo(B3.x, B3.y, C3.x, C3.y); // arc du dessus
+  plafondShape3.lineTo(C3.x, -0.1);   // bas droite (épaisseur très fine)
+  plafondShape3.quadraticCurveTo(B3.x, B3.y - 0.1, 0, -0.1); // arc du dessous
+  plafondShape3.lineTo(0, 0);       // fermer
+
+  // Extrusion
+  const extrudeSettings3 = {
+      depth: plafondLength3,
+      bevelEnabled: false,
+      steps: 1
+  };
+
+  const plafondGeometry3 = new THREE.ExtrudeGeometry(plafondShape3, extrudeSettings3);
+
+  // Charger la texture
+  const ceilingTexture2 = textureLoader.load("./assets/Scene 3D/ceilling Texture.jpg");
+  ceilingTexture2.wrapS = THREE.RepeatWrapping;
+  ceilingTexture2.wrapT = THREE.RepeatWrapping;
+  ceilingTexture2.repeat.set(0.1, 0.1);  
+
+  // Créer le matériau pour le dessus (FrontSide uniquement)
+  const plafondMaterial3 = new THREE.MeshStandardMaterial({
+      map: ceilingTexture2,
+      roughness: 0.5,
+      side: THREE.FrontSide
+  });
+
+  // Créer le mesh
+  const plafondMesh3 = new THREE.Mesh(plafondGeometry3, plafondMaterial3);
+
+  // Positionner et orienter
+  plafondMesh3.rotation.y = Math.PI / 2;
+  plafondGroup3.add(plafondMesh3);
+  scene.add(plafondGroup3);
+
+  plafondGroup3.position.set(-9.65, 8.4, 9.85);
+
+
+
+
+  // -----------------Table--------------------
+    function createCuteTable() {
+    const tableGroup = new THREE.Group();
+
+    const tableMaterial = new THREE.MeshStandardMaterial({
+      color: 0x9e7249, 
+      roughness: 0.8,
+    });
+
+    // Plateau
+    const top = new THREE.Mesh(
+      new THREE.BoxGeometry(5.5, 0.25, 3),
+      tableMaterial
+    );
+    top.position.y = 1.2;
+
+    // Pieds 
+    const legGeom = new THREE.BoxGeometry(0.35, 1.6, 0.35);
+
+    const positions = [
+      [-2.57 , -1, -1.33],
+      [ 2.57 , -1, -1.33],
+      [-2.57, -1,  1.33],
+      [ 2.57, -1,  1.33],
+    ];
+
+    positions.forEach(pos => {
+      const leg = new THREE.Mesh(legGeom, tableMaterial);
+      leg.position.set(pos[0], 0.28, pos[2]);
+      tableGroup.add(leg);
+    });
+
+    tableGroup.add(top);
+
+    // OBJECTS ON TOP OF THE TABLE
+
+    const tableTopY = top.position.y + 0.15;
+
+    // --- 1) Chemin de table ---
+    const runnerGeom = new THREE.BoxGeometry(4.9, 0.02, 1.4);
+    const runnerMat = new THREE.MeshStandardMaterial({
+      color: 0xcde4e0,  
+      roughness: 0.9
+    });
+    const runner = new THREE.Mesh(runnerGeom, runnerMat);
+    runner.position.set(0, tableTopY, 0);
+    tableGroup.add(runner);
+
+    // --- 2) Vase ---
+    const vaseGeom = new THREE.CylinderGeometry(0.25, 0.35, 0.8, 16);
+    const vaseMat = new THREE.MeshStandardMaterial({
+      color: 0xdedeea,
+      roughness: 0.5
+    });
+    const vase = new THREE.Mesh(vaseGeom, vaseMat);
+    vase.position.set(-1.3, tableTopY + 0.4, -0.2);
+    tableGroup.add(vase);
+
+    // --- 3) Herbes vertes ---
+    const grassMat = new THREE.MeshStandardMaterial({ color: 0x6cae6a });
+
+    for (let i = 0; i < 6; i++) {
+      const leafGeom = new THREE.ConeGeometry(0.07, 0.7, 6);
+      const leaf = new THREE.Mesh(leafGeom, grassMat);
+
+      leaf.position.set(
+        -1.3 + (Math.random() * 0.1 - 0.05),
+        tableTopY + 0.8,
+        -0.2 + (Math.random() * 0.1 - 0.05)
+      );
+
+      leaf.rotation.x = (Math.random() * 0.6 - 0.3);
+      leaf.rotation.z = (Math.random() * 0.6 - 0.3);
+
+      tableGroup.add(leaf);
+    }
+
+    tableGroup.position.set(4, -1.3, 2);
+    tableGroup.rotation.y = Math.PI / 2;
+    tableGroup.castShadow = true;
+
+    scene.add(tableGroup);
+  }
+
+    createCuteTable();
+
+  // TAPIS RECTANGULAIRE
+
+    const rugTexture = textureLoader.load("./assets/Scene 3D/tapis_texture.jpg", (t) => {
+      t.wrapS = THREE.ClampToEdgeWrapping;
+      t.wrapT = THREE.ClampToEdgeWrapping;
+      t.repeat.set(1, 1); 
+      t.offset.set(0, 0);
+    });
+
+    const rugMaterial = new THREE.MeshStandardMaterial({
+      map: rugTexture,
+      roughness: 0.95,
+      side: THREE.DoubleSide,
+    });
+
+    // Rectangle
+    const rug = new THREE.Mesh(
+      new THREE.PlaneGeometry(15, 12),
+      rugMaterial
+    );
+
+    rug.rotation.x = -Math.PI / 2;
+    rug.position.set(2, -1.64, 1.5);
+    rug.receiveShadow = true;
+
+    scene.add(rug);
+
+  //---------Sofa--------------
+    function createCozySofa() {
+      const sofaGroup = new THREE.Group();
+      const sofaMat = new THREE.MeshStandardMaterial({
+        color: 0xf5bcc2,
+        roughness: 0.7
+      });
+
+      // 1) Assise
+      const seat = new THREE.Mesh(
+        new THREE.BoxGeometry(3, 0.6, 1.2),
+        sofaMat
+      );
+      seat.position.y = 0.3;
+      sofaGroup.add(seat);
+
+      // 2) Dossier
+      const back = new THREE.Mesh(
+        new THREE.BoxGeometry(3, 1.5, 0.3),
+        sofaMat
+      );
+      back.position.set(0, 0.9, -0.45);
+      sofaGroup.add(back);
+
+      // 3) Accoudoirs
+      const armGeom = new THREE.BoxGeometry(0.3, 0.8, 1.2);
+      const leftArm = new THREE.Mesh(armGeom, sofaMat);
+      leftArm.position.set(-1.65, 0.4, 0);
+      sofaGroup.add(leftArm);
+
+      const rightArm = new THREE.Mesh(armGeom, sofaMat);
+      rightArm.position.set(1.65, 0.4, 0);
+      sofaGroup.add(rightArm);
+
+      // 4) Coussin
+      const cushion = new THREE.Mesh(
+        new THREE.BoxGeometry(3, 0.25, 1.15),
+        new THREE.MeshStandardMaterial({ color: 0xffebed, roughness: 0.6 })
+      );
+      cushion.position.set(0, 0.61, 0);
+      sofaGroup.add(cushion);
+
+      // 5) Pieds cylindriques
+      const legMat = new THREE.MeshStandardMaterial({ color: 0xd7ba99, roughness: 0.8 });
+      const legGeom = new THREE.CylinderGeometry(0.04, 0.04, 0.3, 16);
+
+      const legPositions = [
+        [-1.7, -0.15, 0.5],   // avant gauche
+        [ 1.7, -0.15, 0.5],   // avant droite
+        [-1.7, -0.15, -0.5],  // arrière gauche
+        [ 1.7, -0.15, -0.5]   // arrière droite
+      ];
+
+      legPositions.forEach(pos => {
+        const leg = new THREE.Mesh(legGeom, legMat);
+        leg.position.set(pos[0], pos[1], pos[2]);
+        sofaGroup.add(leg);
+      });
+
+      // Position finale
+      sofaGroup.position.set(-7.5, -1.2, 1.5);
+      sofaGroup.rotation.y = Math.PI / 2;
+      sofaGroup.scale.set(4, 2.2, 3);
+
+      scene.add(sofaGroup);
+    }
+
+    createCozySofa();
+
+  loader.load('./assets/Scene 3D/ceiling_lamp.glb',
+    function (gltf) {
+      const model = gltf.scene;
+
+      model.position.set(6,-13, 0);//x,y,z
+      model.rotation.set(0,Math.PI/2,0)
+
+      const desiredHeight = 7; 
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y; 
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+
+      scene.add(model);
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+  // Créer une lumière ponctuelle
+  const pointLight = new THREE.PointLight(0xffffff, 1, 50); 
+  pointLight.position.set(2, 8, 0); // x, y, z
+  pointLight.castShadow = true;
+  pointLight.shadow.mapSize.width = 1024;
+  pointLight.shadow.mapSize.height = 1024;
+  pointLight.shadow.bias = -0.0005;
+  scene.add(pointLight);
+
+
+  const pointLight2= new THREE.PointLight(0xffffff, 1, 50); 
+  pointLight2.position.set(6, 8, 0); // x, y, z
+  pointLight2.castShadow = true;
+  pointLight2.shadow.mapSize.width = 1024;
+  pointLight2.shadow.mapSize.height = 1024;
+  pointLight2.shadow.bias = -0.0005;
+  scene.add(pointLight2);
+
+  const pointLight3= new THREE.PointLight(0xffffff, 1, 50); 
+  pointLight3.position.set(10, 8, 0); // x, y, z
+  pointLight3.castShadow = true;
+  pointLight3.shadow.mapSize.width = 1024;
+  pointLight3.shadow.mapSize.height = 1024;
+  pointLight3.shadow.bias = -0.0005;
+  scene.add(pointLight3);
+
+  loader.load('./assets/Scene 3D/sakura.glb',
+    function (gltf) {
+      const model = gltf.scene;
+
+      model.position.set(-28, -3, -20);
+      //model.rotation.set(0, -Math.PI / 2, 0);
+
+      // Déterminer l'échelle finale
+      const desiredHeight = 7; 
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y; 
+      model.scale.setScalar(scaleFactor);
+      model.traverse(obj => obj.castShadow = true);
+
+      scene.add(model);
+      model.scale.set(1, 1, 1);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+  loader.load('./assets/Scene 3D/sakura.glb',
+    function (gltf) {
+      const model = gltf.scene;
+
+      model.position.set(10, -3, -35);
+
+      const desiredHeight = 7;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+      model.traverse(obj => obj.castShadow = true);
+
+      scene.add(model);
+      model.scale.set(1, 1, 1);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+  loader.load('./assets/Scene 3D/sakura.glb',
+    function (gltf) {
+      const model = gltf.scene;
+
+      model.position.set(25, -3, 20);
+
+      const desiredHeight = 7; 
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+      model.traverse(obj => obj.castShadow = true);
+
+      scene.add(model);
+      model.scale.set(0.5, 0.5, 0.5);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+
+  loader.load('./assets/Scene 3D/sakura.glb',
+    function (gltf) {
+      const model = gltf.scene;
+
+      model.position.set(-7,-0.8, -6.7);
+      model.rotation.set(0, -Math.PI , 0);
+
+      const desiredHeight = 7; 
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y; 
+      model.scale.setScalar(scaleFactor);
+      model.traverse(obj => obj.castShadow = true);
+
+      scene.add(model);
+      model.scale.set(0.15, 0.15, 0.15);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+  loader.load('./assets/Scene 3D/white_plant_pot.glb',
+    function (gltf) {
+      const model = gltf.scene;
+
+      model.position.set(-7,-1.5, -6.7);
+      model.rotation.set(0, -Math.PI , 0);
+
+      const desiredHeight = 7; 
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+      model.traverse(obj => obj.castShadow = true);
+
+      scene.add(model);
+      model.scale.set(8, 8, 8);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+
+
+
+  loader.load('./assets/Scene 3D/floating_wallShelf.glb',
+    function (gltf) {
+      const model = gltf.scene;
+
+      model.position.set(19.5, 6, 5);
+      model.rotation.set(0, -Math.PI / 2, 0);
+
+      const desiredHeight = 4;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+      scene.add(model);
+      model.scale.set(10, 8, 10);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+
+  loader.load('./assets/Scene 3D/meubletv1.glb', function (gltf) {
+      const model = gltf.scene;
+
+      const meubleMeshes = ['Cube001_1', 'Cube001_2', 'Cube001'];
+
+      model.traverse(obj => {
+          if (obj.isMesh && meubleMeshes.includes(obj.name)) {
+              obj.material = new THREE.MeshStandardMaterial({
+                  color: 0xFFFFFF, 
+                  roughness: 0.6,
+                  metalness: 0.1
+              });
+              obj.castShadow = true;
+          }
+      });
+
+      // Ajouter le modèle à la scène
+      model.position.set(19, 0, 1);
+      model.rotation.set(0, -Math.PI / 2, 0);
+
+      const desiredHeight = 7;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+      scene.add(model);
+  }, undefined, function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+  });
+
+
+
+  loader.load('./assets/Scene 3D/vase_6.glb',
+    function (gltf) {
+      const model = gltf.scene;
+      
+      // Ajouter le modèle à la scène comme avant
+      model.position.set(18, -1.3, 5.9);
+      model.rotation.set(0,Math.PI,0);
+
+      const desiredHeight = 4;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+      scene.add(model);
+      model.scale.set(0.01, 0.01, 0.01);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+  loader.load('./assets/Scene 3D/flower_with_vase.glb',
+    function (gltf) {
+      const model = gltf.scene;
+      
+      model.position.set(18.1, -1.1, 5.9);
+      model.rotation.set(0,Math.PI,0);
+
+      const desiredHeight = 4;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+      scene.add(model);
+      model.scale.set(0.25, 0.2, 0.25);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+  loader.load('./assets/Scene 3D/books_and_magazines.glb',
+    function (gltf) {
+      const model = gltf.scene;
+      
+      model.position.set(19.5, 6.7, 3.2);
+      model.rotation.set(0, Math.PI / 2, 0);
+
+      const desiredHeight = 4;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+      scene.add(model);
+      model.scale.set(0.14, 0.1, 0.1);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+  loader.load('./assets/Scene 3D/candle.glb',
+    function (gltf) {
+      const model = gltf.scene;
+      
+      model.position.set(19.5, 5.5, 3.2);
+      model.rotation.set(0, Math.PI / 2, 0);
+
+      const desiredHeight = 4;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+      scene.add(model);
+      model.scale.set(0.3, 0.3, 0.3);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+  loader.load('./assets/Scene 3D/candle.glb',
+    function (gltf) {
+      const model = gltf.scene;
+      
+      model.position.set(19.5, 5.4, 2.4);
+      model.rotation.set(0, Math.PI / 2, 0);
+
+      const desiredHeight = 4;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+      scene.add(model);
+      model.scale.set(0.18, 0.18, 0.18);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+  loader.load('./assets/Scene 3D/dipcandle.glb',
+    function (gltf) {
+      const model = gltf.scene;
+      
+      model.position.set(3.8, 0.3, 2.4);
+      model.traverse(obj => {
+          if (obj.isMesh) {
+
+              if (obj.name === "Cylinder_CandleHolder_0") {
+                  obj.material = new THREE.MeshStandardMaterial({
+                      color: 0xff6186,  
+                      roughness: 0.6,
+                      metalness: 0.1
+                  });
+              }
+
+              obj.castShadow = true;
+              obj.receiveShadow = true;
+          }
+      });
+
+      const desiredHeight = 4;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+      scene.add(model);
+      model.scale.set(0.8, 0.6, 0.8);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+  loader.load('./assets/Scene 3D/dipcandle.glb',
+    function (gltf) {
+      const model = gltf.scene;
+      
+      model.position.set(4.3, 0.1, 1.7);
+      model.traverse(obj => {
+          if (obj.isMesh) {
+              if (obj.name === "Cylinder_CandleHolder_0") {
+                  obj.material = new THREE.MeshStandardMaterial({
+                      color: 0xff6186,
+                      roughness: 0.6,
+                      metalness: 0.1
+                  });
+              }
+
+              obj.castShadow = true;
+              obj.receiveShadow = true;
+          }
+      });
+
+      const desiredHeight = 4;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+      scene.add(model);
+      model.scale.set(0.6, 0.6, 0.6);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+  loader.load('./assets/Scene 3D/england_tea_cup.glb',
+    function (gltf) {
+      const model = gltf.scene;
+      model.position.set(3.8, 0.08, 0.8);
+
+
+      const desiredHeight = 4;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+      scene.add(model);
+      model.scale.set(0.012, 0.012, 0.012)
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+  loader.load('./assets/Scene 3D/perfume_bottle.glb',
+    function (gltf) {
+      const model = gltf.scene;
+
+      // Appliquer la couleur rose à tous les meshes
+      model.traverse(obj => {
+        if (obj.isMesh) {
+          obj.material = new THREE.MeshStandardMaterial({
+            color: 0xFFC0CB, 
+            roughness: 0.5,
+            metalness: 0.1
+          });
+          obj.castShadow = true;
+          obj.receiveShadow = true;
+        }
+      });
+      
+      model.position.set(19, 1.2, 5.2);
+    
+      const desiredHeight = 4;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+      scene.add(model);
+      model.scale.set(10, 10, 10);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+  loader.load('./assets/Scene 3D/pots_and_vase_with_flowers.glb',
+    function (gltf) {
+      const model = gltf.scene;
+      
+      model.position.set(19.4, 3.8, 7);
+      model.rotation.set(0,Math.PI,0);
+
+      const desiredHeight = 4;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+      scene.add(model);
+      model.scale.set(0.1, 0.1, 0.1);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+  loader.load('./assets/Scene 3D/stylized_bike.glb',
+    function (gltf) {
+      const model = gltf.scene;
+      
+      model.position.set(14.2, -2, -8);
+
+      const desiredHeight = 4;
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+      scene.add(model);
+      //model.scale.set(0.5, 0.5, 0.5);
+
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+
+  loader.load('./assets/Scene 3D/floor_lamp.glb',
+    function (gltf) {
+      const model = gltf.scene;
+
+      model.position.set(19.5, -1.6, -7.5);
+      model.rotation.set(0, Math.PI/4, 0);
+
+      const desiredHeight = 7; 
+      const box = new THREE.Box3().setFromObject(model);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y; 
+      model.scale.setScalar(scaleFactor);
+
+      model.traverse(obj => obj.castShadow = true);
+
+      scene.add(model);
+    },
+    undefined,
+    function (error) {
+      console.error("Erreur de chargement du modèle :", error);
+    }
+  );
+
+  const loader2 = new FBXLoader();
+  const textureLoader2 = new THREE.TextureLoader();
+
+  loader2.load('./assets/Scene 3D/PILLOW_HEART.fbx', function(fbx) {
+
+    const diffuseMap = textureLoader2.load('./assets/Scene 3D/file_409ad62542dfb454~.jpg');
+    const normalMap  = textureLoader2.load('./assets/Scene 3D/file_4bd97004a34bdb74~.jpg');
+
+    // Appliquer textures / couleurs selon le mesh
+    fbx.traverse((child) => {
+      if (child.isMesh) {
+        // Meshes du coussin
+        if (child.name === "Box001" || child.name === "Box002") {
+          child.material = new THREE.MeshStandardMaterial({
+              map: diffuseMap,
+              normalMap: normalMap,
+              roughness: 0.8,
+              metalness: 0.0
+          });
+        } 
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+    let heartIndex = 0;  
+
+    fbx.traverse((child) => {
+      if (child.isMesh) {
+        if (child.name === "Box001" || child.name === "Box002") {
+          // texture sur coussin
+          child.material = new THREE.MeshStandardMaterial({
+            map: diffuseMap,
+            normalMap: normalMap,
+            roughness: 0.8,
+            metalness: 0.0
+          });
+
+        } else if (child.name.startsWith("HEART_")) {
+          // Alterner rose et blanc
+          const colors = [0xFFFFFF, 0xFFC0CB]; 
+          const color = new THREE.Color(colors[heartIndex % colors.length]);
+          child.material = new THREE.MeshStandardMaterial({
+            color: color,
+            roughness: 0.5,
+            metalness: 0.0
+          });
+
+          heartIndex++;
+        }
+
+        child.castShadow = true;
+        child.receiveShadow = true;
+      }
+    });
+
+    // Position / rotation
+    fbx.position.set(-7.5, 1.2, 1.3);
+    fbx.rotation.order = 'ZYX'; 
+    fbx.rotation.set(0, -Math.PI/2, -Math.PI/3);
+
+    // Échelle auto
+    const desiredHeight = 2.2;
+    const box = new THREE.Box3().setFromObject(fbx);
+    const size = box.getSize(new THREE.Vector3());
+    const scaleFactor = desiredHeight / size.y;
+    fbx.scale.setScalar(scaleFactor);
+
+    scene.add(fbx);
+    fbx.scale.set(0.2, 0.2, 0.2);  // agrandir tout le modèle
+  });
+
+
+  loader2.load('./assets/Scene 3D/armchair.fbx', function(fbx) {
+
+      // Position / rotation
+      fbx.position.set(15.4, 0.6, -7);
+      fbx.rotation.set(0, -Math.PI / 2, 0);
+
+      // Parcourir les meshes et appliquer les couleurs
+      fbx.traverse(obj => {
+          if (obj.isMesh) {
+              if (obj.name === "Pillow_4") {
+                  // Rose clair pour le coussin
+                  obj.material = new THREE.MeshStandardMaterial({
+                      color: 0xEFE7DC, 
+                      roughness: 0.5,
+                      metalness: 0.0
+                  });
+              } else if (obj.name === "pCube212") {
+                  // Rose plus saturé pour l'autre partie
+                  obj.material = new THREE.MeshStandardMaterial({
+                      color: 0x993D4c, 
+                      roughness: 0.5,
+                      metalness: 0.0
+                  });
+              }
+
+              obj.castShadow = true;
+              obj.receiveShadow = true;
+          }
+      });
+
+      // Échelle auto
+      const desiredHeight = 2.2;
+      const box = new THREE.Box3().setFromObject(fbx);
+      const size = box.getSize(new THREE.Vector3());
+      const scaleFactor = desiredHeight / size.y;
+      fbx.scale.setScalar(scaleFactor);
+      fbx.scale.set(0.035,0.035,0.035);
+
+      scene.add(fbx);
+
+  });
+
+
+    // ---------- Palette ----------
+    const COL = {
+      outline: 0xffffff,
+      white:   0xffffff,
+      red:     0xe6002d,
+      blue:    0x0a86dc,
+      yellow:  0xffea00,
+      nose:    0xffd100,
+      eye: 0x000000      // yeux noirs
+
+    };
+
+    function mat(color, flat=true){
+      return new THREE.MeshStandardMaterial({
+        color,
+        roughness: 0.9,
+        metalness: 0,
+        flatShading: flat
+      });
+    }
+
+    // Outline cartoon
+    function addOutline(parent, mesh, scale=1.06){
+      const outlineMat = new THREE.MeshBasicMaterial({
+        color: COL.outline,
+        side: THREE.BackSide
+      });
+      const o = new THREE.Mesh(mesh.geometry, outlineMat);
+      o.position.copy(mesh.position);
+      o.rotation.copy(mesh.rotation);
+      o.scale.copy(mesh.scale).multiplyScalar(scale);
+      parent.add(o);
+      return o;
+    }
+
+    function add(parent, geom, material, x=0,y=0,z=0, rx=0,ry=0,rz=0, sx=1,sy=1,sz=1){
+      const m = new THREE.Mesh(geom, material);
+      m.position.set(x,y,z);
+      m.rotation.set(rx,ry,rz);
+      m.scale.set(sx,sy,sz);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      parent.add(m);
+      addOutline(parent, m);
+      return m;
+    }
+
+    // Ajout SANS contour (pour yeux, nez, boutons)
+    function addNoOutline(parent, geom, material, x=0,y=0,z=0, rx=0,ry=0,rz=0, sx=1,sy=1,sz=1){
+      const m = new THREE.Mesh(geom, material);
+      m.position.set(x,y,z);
+      m.rotation.set(rx,ry,rz);
+      m.scale.set(sx,sy,sz);
+      parent.add(m);
+      return m;
+    }
+
+    
+
+    // ---------- Kitty Group ----------
+    const kitty = new THREE.Group();
+    scene.add(kitty);
+    kitty.scale.set(0.6, 0.6, 0.6); 
+    kitty.position.y=-0.35;
+    kitty.position.x=11;
+    kitty.position.z=-7.5;
+
+
+
+
+    // ================= HEAD =================
+    const headGeom = new THREE.SphereGeometry(2.2, 32, 32);
+    add(kitty, headGeom, mat(COL.white),
+        0, 3.3, 0,
+        0,0,0,
+        1.35, 1.1, 1.15);
+
+    // oreilles
+    const earGeom = new THREE.SphereGeometry(0.9, 24, 24);
+    add(kitty, earGeom, mat(COL.white), -2.0, 5.0, -0.2, 0,0,0, 1.0, 1.1, 0.9);
+    add(kitty, earGeom, mat(COL.white),  2.0, 5.0, -0.2, 0,0,0, 1.0, 1.1, 0.9);
+
+    // yeux (sans outline) + bien devant
+    const eyeGeom = new THREE.SphereGeometry(0.33, 18, 18);
+    const eyeMat  = new THREE.MeshBasicMaterial({ color: COL.eye });
+    addNoOutline(kitty, eyeGeom, eyeMat, -1.05, 3.45, 2.35, 0,0,0, 1.0,1.6,1.0);
+    addNoOutline(kitty, eyeGeom, eyeMat,  1.05, 3.45, 2.35, 0,0,0, 1.0,1.6,1.0);
+
+    // ✅ NEZ visible (plus devant que tout) + sans outline
+    const noseGeom = new THREE.SphereGeometry(0.22, 16, 16);
+    const noseMat  = new THREE.MeshBasicMaterial({ color: COL.nose });
+    addNoOutline(kitty, noseGeom, noseMat,
+        0, 2.9, 2.55,   // z augmenté
+        0,0,0,
+        1.6,1.1,1.0);
+
+    // ✅ Moustaches horizontales (axe X)
+    function whisker(x,y,z, tilt=0){
+      const g = new THREE.CylinderGeometry(0.03, 0.03, 1.6, 10);
+      const w = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: COL.outline }));
+      // cylindre est vertical (Y), on l'aligne sur X
+      w.rotation.z = Math.PI/2 + tilt;  // horizontal + petit tilt
+      w.position.set(x,y,z);
+      kitty.add(w);
+    }
+
+    const wz = 2.05; // devant la tête
+    whisker(-2.25, 3.30, wz,  0.20);
+    whisker(-2.35, 3.00, wz,  0.00);
+    whisker(-2.25, 2.70, wz, -0.20);
+
+    whisker( 2.25, 3.30, wz, -0.20);
+    whisker( 2.35, 3.00, wz,  0.00);
+    whisker( 2.25, 2.70, wz,  0.20);
+    
+    // --- Bow (nœud) geometries ---
+    const bowLobeGeom = new THREE.SphereGeometry(0.9, 24, 24);
+    const bowCenterGeom = new THREE.SphereGeometry(0.45, 24, 24);
+
+    // nœud rouge
+    const bow1 = add(kitty, bowLobeGeom, mat(COL.red), 1.6, 4.7, 1.4, 0,0,0, 1.2,0.9,0.9);
+    bow1.userData.part = "bow";
+
+    const bow2 = add(kitty, bowLobeGeom, mat(COL.red), 2.5, 4.35, 1.2, 0,0,0, 1.2,0.9,0.9);
+    bow2.userData.part = "bow";
+
+    const bowC = add(kitty, bowCenterGeom, mat(COL.red), 2.05, 4.45, 1.8);
+    bowC.userData.part = "bow";
+
+    // ================= BODY =================
+    // --- Torso (t-shirt) geometry ---
+    const torsoGeom = new THREE.CapsuleGeometry(0.9, 1.4, 12, 16);
+
+    // --- Overall (salopette) geometry ---
+    const overallGeom = new THREE.BoxGeometry(2.2, 1.8, 1.6);
+
+    // t-shirt jaune
+    const torso = add(kitty, torsoGeom, mat(COL.yellow), 0, 0.9, 0, 0,0,0, 1.25,1.0,1.1);
+    torso.userData.part = "shirt";
+
+
+    // salopette bleue
+    const overall = add(kitty, overallGeom, mat(COL.blue), 0, 0.35, 0.35);
+    overall.userData.part = "overall";
+
+    // bavette
+    const bibGeom = new THREE.CylinderGeometry(1.0, 1.0, 0.6, 24, 1, false, 0, Math.PI);
+    const bib = new THREE.Mesh(bibGeom, mat(COL.blue));
+    bib.rotation.x = Math.PI/2;
+    bib.position.set(0, 0.95, 1.05);
+    bib.userData.part = "overall";   
+    kitty.add(bib);
+    addOutline(kitty, bib);
+
+
+    // boutons blancs (sans outline)
+    const btnGeom = new THREE.SphereGeometry(0.18, 14, 14);
+    const btnMat  = new THREE.MeshBasicMaterial({ color: COL.white });
+    addNoOutline(kitty, btnGeom, btnMat, -0.6, 0.9, 1.15);
+    addNoOutline(kitty, btnGeom, btnMat,  0.6, 0.9, 1.15);
+
+    // bras + mains
+    const armGeom = new THREE.CapsuleGeometry(0.28, 0.9, 6, 12);
+    add(kitty, armGeom, mat(COL.yellow), -1.9, 1.0, 0.2, 0,0, 0.45);
+    add(kitty, armGeom, mat(COL.yellow),  1.9, 1.0, 0.2, 0,0,-0.45);
+
+    const handGeom = new THREE.SphereGeometry(0.45, 16, 16);
+    add(kitty, handGeom, mat(COL.white), -2.7, 1.45, 0.4);
+    add(kitty, handGeom, mat(COL.white),  2.7, 1.45, 0.4);
+
+    // jambes + pieds
+    const legGeom = new THREE.CapsuleGeometry(0.4, 0.8, 6, 12);
+    add(kitty, legGeom, mat(COL.white), -0.65, -1.1, 0.2);
+    add(kitty, legGeom, mat(COL.white),  0.65, -1.1, 0.2);
+
+    const footGeom = new THREE.SphereGeometry(0.55, 16, 16);
+    add(kitty, footGeom, mat(COL.white), -0.65, -1.65, 0.7, 0,0,0, 1.2,0.8,1.2);
+    add(kitty, footGeom, mat(COL.white),  0.65, -1.65, 0.7, 0,0,0, 1.2,0.8,1.2);
+
+    // queue
+    const tailGeom = new THREE.CylinderGeometry(0.16, 0.2, 1.0, 10);
+    const tail = new THREE.Mesh(tailGeom, mat(COL.white));
+    tail.position.set(-1.8, -0.2, -0.9);
+    tail.rotation.z = 0.9;
+    kitty.add(tail);
+    addOutline(kitty, tail);
+
+    // ---------- UI bindings ----------
+    const ui = {
+      colorBow: document.getElementById('colorBow'),
+      colorShirt: document.getElementById('colorShirt'),
+      colorOverall: document.getElementById('colorOverall'),
+      colBowText: document.getElementById('colBowText'),
+      colShirtText: document.getElementById('colShirtText'),
+      colOverallText: document.getElementById('colOverallText'),
+      rotY: document.getElementById('rotY'),
+      posX: document.getElementById('posX'),
+      posZ: document.getElementById('posZ'),
+      rotX: document.getElementById('rotX'),
+      rotZ: document.getElementById('rotZ'),
+      randomizeIcon: document.getElementById('randomizeIcon'),
+      preset: document.getElementById('preset'),
+      applyPreset: document.getElementById('applyPreset'),
+      resetIcon: document.getElementById('resetIcon')
+    };
+  document.getElementById("toggleCurtainsIcon").addEventListener("click", () => {
+    curtainsClosed = !curtainsClosed;
+  });
+
+
+    // ------------ Color Pickers ------------
+  ui.colorBow.addEventListener("input", () => {
+    kitty.traverse(obj => {
+      if (obj.material && obj.userData.part === "bow") {
+        obj.material.color.set(ui.colorBow.value);
+      }
+    });
+    ui.colBowText.textContent = ui.colorBow.value;
+  });
+
+
+  ui.colorShirt.addEventListener("input", () => {
+    kitty.traverse(obj => {
+      if (obj.material && obj.userData.part === "shirt") {
+        obj.material.color.set(ui.colorShirt.value);
+      }
+    });
+    ui.colShirtText.textContent = ui.colorShirt.value;
+  });
+
+  ui.colorOverall.addEventListener("input", () => {
+    kitty.traverse(obj => {
+      if (obj.material && obj.userData.part === "overall") {
+        obj.material.color.set(ui.colorOverall.value);
+      }
+    });
+    ui.colOverallText.textContent = ui.colorOverall.value;
+  });
+
+
+  // ------------ Sliders ------------
+
+  ui.rotY.addEventListener("input", () => {
+      kitty.rotation.y = parseFloat(ui.rotY.value);
+  });
+
+  const MIN_ROT = -Math.PI / 4;
+  const MAX_ROT =  Math.PI / 4;
+
+  ui.rotX.addEventListener("input", () => {
+    let v = parseFloat(ui.rotX.value);
+    v = Math.min(Math.max(v, MIN_ROT), MAX_ROT); 
+    kitty.rotation.x = v;
+
+    // remettre le slider à la valeur clampée
+    ui.rotX.value = v;
+  });
+
+  ui.rotZ.addEventListener("input", () => {
+    let v = parseFloat(ui.rotZ.value);
+    v = Math.min(Math.max(v, MIN_ROT), MAX_ROT);  
+    kitty.rotation.z = v;
+
+  // remettre le slider à la valeur clampée
+    ui.rotZ.value = v;
+  });
+
+
+    ui.posX.addEventListener("input", () => {
+    kitty.position.x = parseFloat(ui.posX.value);
+  });
+
+    ui.posZ.addEventListener("input", () => {
+    kitty.position.z = parseFloat(ui.posZ.value);
+  });
+  document.querySelectorAll(".neon-range").forEach(slider => {
+    const update = () => {
+      const val = (100 * (slider.value - slider.min)) / (slider.max - slider.min);
+      slider.style.setProperty("--val", val + "%");
+    };
+    slider.addEventListener("input", update);
+    update(); // initialise
+  });
+
+
+    // ------------ Random Colors ------------
+  ui.randomizeIcon.addEventListener("click", () => {
+    const rnd = () =>
+      "#" + Math.floor(Math.random() * 16777215).toString(16).padStart(6, "0");
+
+    const bowCol = rnd();
+    const shCol = rnd();
+    const ovCol = rnd();
+
+    ui.colorBow.value = bowCol;
+    ui.colorShirt.value = shCol;
+    ui.colorOverall.value = ovCol;
+
+    kitty.traverse(obj => {
+      if (!obj.material) return;
+      if (obj.userData.part === "bow") obj.material.color.set(bowCol);
+      if (obj.userData.part === "shirt") obj.material.color.set(shCol);
+      if (obj.userData.part === "overall") obj.material.color.set(ovCol);
+    });
+
+    ui.colBowText.textContent = bowCol;
+    ui.colShirtText.textContent = shCol;
+    ui.colOverallText.textContent = ovCol;
+  });
+
+
+    // ------------ Reset ------------
+  ui.resetIcon.addEventListener("click", () => {
+
+    // Valeurs originales UI
+    ui.colorBow.value = "#e6002d";
+    ui.colorShirt.value = "#ffea00";
+    ui.colorOverall.value = "#0a86dc";
+    ui.scale.value = 1.0;
+    ui.rotY.value = 0.0;
+    ui.rotX.value = 0.0;
+    ui.rotZ.value = 0.0;
+    ui.posY.value = 0.2;
+    ui.posX.value = 0;
+    ui.posZ.value = 0;
+
+    // Réinitialisation couleurs
+    kitty.traverse(obj => {
+      if (!obj.material) return;
+      if (obj.userData.part === "bow")     obj.material.color.set("#e6002d");
+      if (obj.userData.part === "shirt")   obj.material.color.set("#ffea00");
+      if (obj.userData.part === "overall") obj.material.color.set("#0a86dc");
+    });
+
+    // Réinitialisation transform
+    kitty.scale.set(0.6,0.6,0.6);
+    kitty.rotation.set(0,0,0);
+    kitty.position.set(12,-0.35,-7.5);
+
+
+    // Mettre les textes à jour
+    ui.colBowText.textContent = "#e6002d";
+    ui.colShirtText.textContent = "#ffea00";
+    ui.colOverallText.textContent = "#0a86dc";
+  });
+
+
+  // ------------ Presets ------------
+  const presets = {
+    classic: { bow:"#e6002d", shirt:"#ffea00", overall:"#0a86dc" },
+    pink:    { bow:"#ff4fa8", shirt:"#ffb7e5", overall:"#ff8cd1" },
+    night:   { bow:"#6a00ff", shirt:"#3c3c3c", overall:"#1a1a1a" },
+    pastel:  { bow:"#faadbc", shirt:"#fff7a5", overall:"#a4d7f5" }
+  };
+
+  ui.applyPreset.addEventListener("click", () => {
+    const p = presets[ui.preset.value];
+    if (!p) return;
+
+    ui.colorBow.value = p.bow;
+    ui.colorShirt.value = p.shirt;
+    ui.colorOverall.value = p.overall;
+
+    kitty.traverse(obj => {
+      if (!obj.material) return;
+
+      if (obj.userData.part === "bow")     obj.material.color.set(p.bow);
+      if (obj.userData.part === "shirt")   obj.material.color.set(p.shirt);
+      if (obj.userData.part === "overall") obj.material.color.set(p.overall);
+    });
+
+    ui.colBowText.textContent = p.bow;
+    ui.colShirtText.textContent = p.shirt;
+    ui.colOverallText.textContent = p.overall;
+  });
+
+
+  // ---------- Animation (idle) ----------
+  const clock = new THREE.Clock();
+
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+    animateCurtains(); // mise à jour rideaux
+
+      // Animation de respiration
+      const head = kitty.children.find(child => child.geometry && child.geometry.type === "SphereGeometry" && child.position.y > 3);
+      const torso = kitty.children.find(child => child.geometry && child.geometry.type === "CapsuleGeometry");
+      
+      if (head) head.position.y = 3.3 + Math.sin(t * 1.2) * 0.03;
+      if (torso) torso.position.y = 0.9 + Math.sin(t * 1.2 + 0.4) * 0.02;
+    
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+
+  // ---------- Resize ----------
+    window.addEventListener('resize', ()=>{
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  });
+
+  console.log("Hello Kitty scene ready!");
+</script>
+
+</body>
+</html>
